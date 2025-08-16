@@ -1,0 +1,11 @@
+# Fabric Matcher Dependencies
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.12.0
+jellyfish>=0.9.0
+supabase>=1.0.0
+
+# Core dependencies (if not already installed)
+difflib  # Built-in Python library
+dataclasses  # Built-in Python 3.7+
+typing  # Built-in Python 3.5+
+pathlib  # Built-in Python 3.4+

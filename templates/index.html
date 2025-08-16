@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice OCR Analysis System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-receipt"></i>
+                    <h1>Invoice OCR Analysis</h1>
+                </div>
+                <p class="subtitle">Advanced Fabric Invoice Processing & Database Matching</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h2>Upload Invoice</h2>
+                    <p>Upload your invoice (PDF, PNG, JPG, etc.) for automatic analysis</p>
+                    
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="fileInput" name="file" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif,.bmp,.webp" required>
+                            <label for="fileInput" class="file-input-label">
+                                <i class="fas fa-file-upload"></i>
+                                <span>Choose File</span>
+                            </label>
+                        </div>
+                        <div class="selected-file" id="selectedFile" style="display: none;">
+                            <i class="fas fa-file"></i>
+                            <span id="fileName"></span>
+                            <button type="button" class="remove-file" onclick="removeFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="submit" class="upload-btn" id="uploadBtn">
+                            <i class="fas fa-search"></i>
+                            Analyze Invoice
+                        </button>
+                    </form>
+                    
+                    <div class="supported-formats">
+                        <h4>Supported Formats:</h4>
+                        <div class="format-tags">
+                            <span class="format-tag">PDF</span>
+                            <span class="format-tag">PNG</span>
+                            <span class="format-tag">JPG</span>
+                            <span class="format-tag">JPEG</span>
+                            <span class="format-tag">TIFF</span>
+                            <span class="format-tag">BMP</span>
+                            <span class="format-tag">WEBP</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Section -->
+            <section class="loading-section" id="loadingSection" style="display: none;">
+                <div class="loading-card">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                    <h3>Analyzing Invoice...</h3>
+                    <p>Please wait while we process your document</p>
+                    <div class="loading-steps">
+                        <div class="step active">
+                            <i class="fas fa-file-text"></i>
+                            <span>Extracting Text</span>
+                        </div>
+                        <div class="step">
+                            <i class="fas fa-search"></i>
+                            <span>Parsing Items</span>
+                        </div>
+                        <div class="step">
+                            <i class="fas fa-database"></i>
+                            <span>Database Matching</span>
+                        </div>
+                        <div class="step">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Generating Report</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card total-items">
+                        <div class="card-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="totalItems">0</h3>
+                            <p>Total Items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card matched-items">
+                        <div class="card-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="matchedItems">0</h3>
+                            <p>Matched Items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card match-percentage">
+                        <div class="card-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="matchPercentage">0%</h3>
+                            <p>Match Rate</p>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card total-value">
+                        <div class="card-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="totalValue">₹0</h3>
+                            <p>Total Value</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overall Status -->
+                <div class="overall-status" id="overallStatus">
+                    <div class="status-content">
+                        <h3>Overall Analysis Status</h3>
+                        <div class="status-badge" id="statusBadge">
+                            <span id="statusText">Processing...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax Summary -->
+                <div class="tax-summary" id="taxSummary" style="display: none;">
+                    <h3><i class="fas fa-calculator"></i> Tax Summary</h3>
+                    <div class="tax-grid" id="taxGrid">
+                        <!-- Tax details will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Invoice Items Table -->
+                <div class="invoice-items">
+                    <h3><i class="fas fa-table"></i> Invoice Items Analysis</h3>
+                    <div class="table-container">
+                        <table class="analysis-table">
+                            <thead>
+                                <tr>
+                                    <th>Material Name</th>
+                                    <th>Quantity</th>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                    <th>Database Match</th>
+                                    <th>Price Analysis</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <!-- Items will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Detailed Analysis -->
+                <div class="detailed-analysis" id="detailedAnalysis">
+                    <!-- Price mismatch summary will be populated here -->
+                </div>
+
+                <!-- Extracted Text (Collapsible) -->
+                <div class="extracted-text-section">
+                    <button class="collapsible-btn" onclick="toggleExtractedText()">
+                        <i class="fas fa-code"></i>
+                        View Extracted Text
+                        <i class="fas fa-chevron-down" id="extractedTextIcon"></i>
+                    </button>
+                    <div class="extracted-text-content" id="extractedTextContent" style="display: none;">
+                        <pre id="extractedText"></pre>
+                    </div>
+                </div>
+
+                <!-- Analyze Another File Section -->
+                <div class="analyze-another-section">
+                    <div class="analyze-another-card">
+                        <div class="analyze-another-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h3>Analyze Another Invoice</h3>
+                        <p>Want to process another invoice? Upload a new file below.</p>
+                        
+                        <form id="anotherFileForm" enctype="multipart/form-data">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="anotherFileInput" name="file" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif,.bmp,.webp" required>
+                                <label for="anotherFileInput" class="file-input-label">
+                                    <i class="fas fa-file-upload"></i>
+                                    <span>Choose Another File</span>
+                                </label>
+                            </div>
+                            <div class="selected-file" id="anotherSelectedFile" style="display: none;">
+                                <i class="fas fa-file"></i>
+                                <span id="anotherFileName"></span>
+                                <button type="button" class="remove-file" onclick="removeAnotherFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <button type="submit" class="upload-btn" id="anotherUploadBtn" disabled>
+                                <i class="fas fa-search"></i>
+                                Analyze New Invoice
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>Error Occurred</h3>
+                    <p id="errorMessage">An error occurred while processing your invoice.</p>
+                    <button class="retry-btn" onclick="resetForm()">
+                        <i class="fas fa-redo"></i>
+                        Try Again
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Invoice OCR Analysis System. Powered by Advanced OCR Technology.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
